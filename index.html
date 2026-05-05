@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PMO Command Center</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Chart.js bundled locally so the app works fully offline -->
+  <script src="chart.umd.js"></script>
+</head>
+<body>
+  <div id="app">
+
+    <!-- ── Sidebar ── -->
+    <aside id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <span class="logo-icon">⚡</span>
+          <span class="logo-text">PMO Command</span>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-page="dashboard">
+          <span class="nav-icon">📊</span><span>Dashboard</span>
+        </a>
+        <a href="#" class="nav-item" data-page="projects">
+          <span class="nav-icon">📁</span><span>Projects</span>
+        </a>
+        <a href="#" class="nav-item" data-page="tasks">
+          <span class="nav-icon">✅</span><span>Tasks</span>
+        </a>
+        <a href="#" class="nav-item" data-page="resources">
+          <span class="nav-icon">👥</span><span>Resources</span>
+        </a>
+        <a href="#" class="nav-item" data-page="risks">
+          <span class="nav-icon">⚠️</span><span>Risks</span>
+        </a>
+        <a href="#" class="nav-item" data-page="timeline">
+          <span class="nav-icon">📅</span><span>Timeline</span>
+        </a>
+        <a href="#" class="nav-item" data-page="reports">
+          <span class="nav-icon">📈</span><span>Reports</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="reset-btn" onclick="resetData()" title="Reset to sample data">↺ Reset Demo Data</button>
+      </div>
+    </aside>
+
+    <!-- ── Main ── -->
+    <main id="main">
+      <header id="header">
+        <div class="header-left">
+          <button id="sidebar-toggle" title="Toggle sidebar">☰</button>
+          <h1 id="page-title">Dashboard</h1>
+        </div>
+        <div class="header-right">
+          <span class="current-date" id="current-date"></span>
+          <button class="btn btn-primary" id="add-btn" onclick="handleAddClick()">+ Add Project</button>
+        </div>
+      </header>
+      <div id="content"></div>
+    </main>
+  </div>
+
+  <!-- ══════════ PROJECT MODAL ══════════ -->
+  <div class="modal-overlay" id="project-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="project-modal-title">Add Project</h2>
+        <button class="modal-close" onclick="closeModal('project-modal')">×</button>
+      </div>
+      <div class="modal-body">
+        <form id="project-form">
+          <input type="hidden" id="project-id">
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label>Project Name *</label>
+              <input type="text" id="project-name" required placeholder="Enter project name">
+            </div>
+            <div class="form-group full-width">
+              <label>Description</label>
+              <textarea id="project-description" rows="2" placeholder="Brief project description"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Status *</label>
+              <select id="project-status">
+                <option value="On Track">On Track</option>
+                <option value="At Risk">At Risk</option>
+                <option value="Off Track">Off Track</option>
+                <option value="On Hold">On Hold</option>
+                <option value="Completed">Completed</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Priority *</label>
+              <select id="project-priority">
+                <option value="Critical">Critical</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Phase</label>
+              <select id="project-phase">
+                <option value="Initiation">Initiation</option>
+                <option value="Planning">Planning</option>
+                <option value="Execution">Execution</option>
+                <option value="Monitoring">Monitoring</option>
+                <option value="Closure">Closure</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Project Owner</label>
+              <input type="text" id="project-owner" placeholder="Owner name">
+            </div>
+            <div class="form-group">
+              <label>Department</label>
+              <input type="text" id="project-department" placeholder="e.g. IT, Finance">
+            </div>
+            <div class="form-group">
+              <label>Progress (%)</label>
+              <input type="number" id="project-progress" min="0" max="100" value="0">
+            </div>
+            <div class="form-group">
+              <label>Start Date</label>
+              <input type="date" id="project-start-date">
+            </div>
+            <div class="form-group">
+              <label>End Date</label>
+              <input type="date" id="project-end-date">
+            </div>
+            <div class="form-group">
+              <label>Total Budget ($)</label>
+              <input type="number" id="project-budget" min="0" placeholder="0">
+            </div>
+            <div class="form-group">
+              <label>Budget Spent ($)</label>
+              <input type="number" id="project-budget-spent" min="0" placeholder="0">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('project-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveProject()">Save Project</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ TASK MODAL ══════════ -->
+  <div class="modal-overlay" id="task-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="task-modal-title">Add Task</h2>
+        <button class="modal-close" onclick="closeModal('task-modal')">×</button>
+      </div>
+      <div class="modal-body">
+        <form id="task-form">
+          <input type="hidden" id="task-id">
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label>Task Name *</label>
+              <input type="text" id="task-name" required placeholder="Enter task name">
+            </div>
+            <div class="form-group">
+              <label>Project *</label>
+              <select id="task-project"></select>
+            </div>
+            <div class="form-group">
+              <label>Assignee</label>
+              <select id="task-assignee"></select>
+            </div>
+            <div class="form-group">
+              <label>Status</label>
+              <select id="task-status">
+                <option value="To Do">To Do</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Done">Done</option>
+                <option value="Blocked">Blocked</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Priority</label>
+              <select id="task-priority">
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Due Date</label>
+              <input type="date" id="task-due-date">
+            </div>
+            <div class="form-group full-width">
+              <label>Notes</label>
+              <textarea id="task-notes" rows="2" placeholder="Additional notes..."></textarea>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('task-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveTask()">Save Task</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ RISK MODAL ══════════ -->
+  <div class="modal-overlay" id="risk-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="risk-modal-title">Add Risk</h2>
+        <button class="modal-close" onclick="closeModal('risk-modal')">×</button>
+      </div>
+      <div class="modal-body">
+        <form id="risk-form">
+          <input type="hidden" id="risk-id">
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label>Risk Title *</label>
+              <input type="text" id="risk-title" required placeholder="Enter risk title">
+            </div>
+            <div class="form-group full-width">
+              <label>Description</label>
+              <textarea id="risk-description" rows="2" placeholder="Risk description..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Project</label>
+              <select id="risk-project"></select>
+            </div>
+            <div class="form-group">
+              <label>Risk Owner</label>
+              <input type="text" id="risk-owner" placeholder="Owner name">
+            </div>
+            <div class="form-group">
+              <label>Probability</label>
+              <select id="risk-probability">
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Impact</label>
+              <select id="risk-impact">
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Status</label>
+              <select id="risk-status">
+                <option value="Open">Open</option>
+                <option value="Mitigated">Mitigated</option>
+                <option value="Closed">Closed</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Date Identified</label>
+              <input type="date" id="risk-date">
+            </div>
+            <div class="form-group full-width">
+              <label>Mitigation Plan</label>
+              <textarea id="risk-mitigation" rows="2" placeholder="How will you mitigate this risk?"></textarea>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('risk-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveRisk()">Save Risk</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ RESOURCE MODAL ══════════ -->
+  <div class="modal-overlay" id="resource-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="resource-modal-title">Add Team Member</h2>
+        <button class="modal-close" onclick="closeModal('resource-modal')">×</button>
+      </div>
+      <div class="modal-body">
+        <form id="resource-form">
+          <input type="hidden" id="resource-id">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Name *</label>
+              <input type="text" id="resource-name" required placeholder="Full name">
+            </div>
+            <div class="form-group">
+              <label>Role *</label>
+              <input type="text" id="resource-role" required placeholder="Job title / role">
+            </div>
+            <div class="form-group">
+              <label>Department</label>
+              <input type="text" id="resource-department" placeholder="Department">
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" id="resource-email" placeholder="email@company.com">
+            </div>
+            <div class="form-group">
+              <label>Weekly Capacity (hrs)</label>
+              <input type="number" id="resource-capacity" min="0" max="80" value="40">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('resource-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveResource()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ CONFIRM DELETE MODAL ══════════ -->
+  <div class="modal-overlay" id="confirm-modal">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h2>Confirm Delete</h2>
+        <button class="modal-close" onclick="closeModal('confirm-modal')">×</button>
+      </div>
+      <div class="modal-body">
+        <p id="confirm-message">Are you sure you want to delete this item?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('confirm-modal')">Cancel</button>
+        <button class="btn btn-danger" id="confirm-delete-btn">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
