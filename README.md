@@ -45,4 +45,4 @@ PMO-Command-Center/
 └── app.js       ← all application logic + sample data
 ```
 
-No npm, no build step, no internet connection required (once the page is loaded, Chart.js is cached by the browser).
+No npm, no build step, **no internet connection required at all** — Chart.js is bundled locally in `chart.umd.js`, so everything works completely offline.
